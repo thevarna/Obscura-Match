@@ -178,7 +178,7 @@ export function AdminOpsView() {
                 <option value={30}>30 Minutes</option>
               </select>
               <button className="btn btn--secondary btn--sm" onClick={handleResetAuction}>
-                Reset & Start New
+                Reset
               </button>
             </div>
           </div>

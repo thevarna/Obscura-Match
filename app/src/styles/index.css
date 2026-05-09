@@ -408,6 +408,11 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: 0 0 0 3px hsla(225,80%,62%,0.12);
 }
 
+.form-input option, .form-select option {
+  background-color: var(--bg-surface);
+  color: var(--text-primary);
+}
+
 .form-error {
   font-size: 0.75rem;
   color: var(--red);

@@ -36,17 +36,25 @@ export function AuctionRoom() {
   async function handleAuctionClose() {
     setAuctionClosed(true)
     setSettling(true)
-    if (walletPublicKey) {
-      addAuditEvent({ id: `AE-close-${Date.now()}`, timestamp: Date.now(), actor: walletPublicKey.toBase58().slice(0,8)+'…', action: 'Auction closed by crank scheduler', visibilityTier: 'admin' })
+    
+    // Get latest state directly to avoid closure staleness
+    const state = useAppStore.getState()
+    const currentMyOrders = state.myOrders
+    const currentWallet = state.walletPublicKey
+
+    if (currentWallet) {
+      addAuditEvent({ id: `AE-close-${Date.now()}`, timestamp: Date.now(), actor: currentWallet.toBase58().slice(0,8)+'…', action: 'Auction closed by crank scheduler', visibilityTier: 'admin' })
     }
+    
     // Calculate dynamic match result based on user's involvement
-    const userMatchedVolume = myOrders.reduce((sum, o) => sum + o.size, 0)
+    const userMatchedVolume = currentMyOrders.reduce((sum, o) => sum + o.size, 0)
     const baseVolume = 42000 + Math.floor(Math.random() * 10000)
+    const simulatedClearingPrice = 0.004412 + (Math.random() * 0.0001)
     
     const demo: MatchState = {
       auctionId: currentAuction?.id ?? 'AUCTION-001',
       matchedSize: baseVolume + userMatchedVolume,
-      clearingPrice: 0.004412 + (Math.random() * 0.0001),
+      clearingPrice: simulatedClearingPrice,
       buyOrderId: 'ORDER-MATCH-77', 
       sellOrderId: 'ORDER-MATCH-88',
       settlementStatus: 'committed',
@@ -54,19 +62,19 @@ export function AuctionRoom() {
     }
     
     // Transition user's own orders to settled
-    myOrders.forEach(order => {
+    currentMyOrders.forEach(order => {
       updateOrderStatus(order.id, 'settled')
     })
 
     // Simulate a list of matched orders for the demo
     const simulatedMatchedOrders: MatchState['matchedOrders'] = [
-      { id: 'ORDER-MATCH-77', side: 'buy', size: baseVolume * 0.6, price: 0.004412, isTotalMatch: true },
-      { id: 'ORDER-MATCH-88', side: 'sell', size: baseVolume * 0.4, price: 0.004412, isTotalMatch: true },
-      ...myOrders.map(o => ({
+      { id: 'ORDER-MATCH-77', side: 'buy', size: baseVolume * 0.6, price: simulatedClearingPrice, isTotalMatch: true },
+      { id: 'ORDER-MATCH-88', side: 'sell', size: baseVolume * 0.4, price: simulatedClearingPrice, isTotalMatch: true },
+      ...currentMyOrders.map(o => ({
         id: o.id.slice(0, 12),
         side: o.side,
         size: o.size,
-        price: 0.004412,
+        price: simulatedClearingPrice,
         isTotalMatch: true
       }))
     ]
