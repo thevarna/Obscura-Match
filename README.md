@@ -2,15 +2,23 @@
 
 > **Confidential sealed-bid OTC block-crossing engine** — Privacy Track, Colosseum Hackathon
 >
+> 🌐 **Live Demo:** [app-theta-ten-53.vercel.app](https://app-theta-ten-53.vercel.app/)
+> 
 > Powered by MagicBlock Private Ephemeral Rollup on Intel TDX
 
 ---
 
 ## What It Does
 
-Obscura Match is an institutional-grade OTC crossing engine for **one SPL pair (USDC/SOL)**. Traders submit sealed bids into a TEE-backed Private Ephemeral Rollup. Orders are matched confidentially, with the net result committing back to Solana at settlement.
+Obscura Match is a high-performance, privacy-first OTC (Over-The-Counter) crossing engine built on Solana. It leverages **MagicBlock Private Ephemeral Rollups (PER)** and **Intel TDX Trusted Execution Environments (TEEs)** to allow institutional traders to execute large block trades without pre-trade signaling, MEV, or front-running.
 
-**Zero pre-trade signaling. Zero MEV. Fully auditable.**
+By keeping the order book strictly confidential and executing matches within a sealed TEE environment, Obscura Match brings dark-pool levels of privacy to the Solana ecosystem. Unlike traditional dark pools, Obscura maintains full on-chain settlement finality and provides sophisticated auditability for compliance.
+
+### Core Value Proposition
+- **Zero Information Leakage**: No public order book. Bids and asks are encrypted and cross-matched privately.
+- **MEV & Front-running Shield**: Batch settlement at a single clearing price removes the incentive for sandwich attacks and toxic flow.
+- **Institutional-Grade Compliance**: Role-based access control and detailed audit logs for regulators, ensuring privacy doesn't mean anonymity.
+- **Seamless UX**: High-speed, gasless interactions within the PER, committing back to Solana Devnet for settlement.
 
 ---
 
