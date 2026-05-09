@@ -106,7 +106,7 @@ export const useAppStore = create<AppState>()(
       auctionOrderCount: 0,
       setAuction: (currentAuction) => set({ currentAuction }),
       incrementOrderCount: () => set((s) => ({ auctionOrderCount: s.auctionOrderCount + 1 })),
-      resetAuctionState: () => set({ currentAuction: null, auctionOrderCount: 0, crankState: null, myOrders: [], txSteps: [] }),
+      resetAuctionState: () => set({ currentAuction: null, auctionOrderCount: 0, crankState: null, myOrders: [], txSteps: [], matchResult: null }),
 
       // Orders
       myOrders: [],

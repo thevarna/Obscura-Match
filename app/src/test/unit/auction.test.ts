@@ -29,11 +29,11 @@ describe('createDemoAuction()', () => {
   it('closeTime is in the future', () => {
     expect(auction.closeTime).toBeGreaterThan(Math.floor(Date.now() / 1000))
   })
-  it('closeTime is ~15 minutes from now', () => {
+  it('closeTime is ~5 minutes from now', () => {
     const now = Math.floor(Date.now() / 1000)
     const diff = auction.closeTime - now
-    expect(diff).toBeGreaterThan(800)   // at least 800 seconds
-    expect(diff).toBeLessThan(1000)     // at most 1000 seconds
+    expect(diff).toBeGreaterThan(250)   // at least 250 seconds
+    expect(diff).toBeLessThan(350)      // at most 350 seconds
   })
   it('lotSize is positive', () => {
     expect(auction.lotSize).toBeGreaterThan(0)
