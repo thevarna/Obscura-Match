@@ -6,17 +6,17 @@ import { TransactionTimeline } from '../components/TransactionTimeline'
 import { AuctionTimer } from '../components/AuctionTimer'
 import { useAppStore } from '../store/useAppStore'
 import { prepareDeposit, prepareWithdraw, prepareOrderSubmit, createDemoAuction } from '../lib/auction'
-import { verifyAndConnectTEE } from '../lib/magicblock'
+import { verifyAndConnectTEE, signAndSendApiTx } from '../lib/magicblock'
 import { TEE_VALIDATOR } from '../lib/magicblock'
 
 type FormTab = 'order' | 'deposit' | 'withdraw'
 
 export function TraderTerminal() {
-  const { publicKey, signMessage } = useWallet()
+  const { publicKey, signMessage, sendTransaction } = useWallet()
   const {
     currentAuction, setAuction, myOrders, addOrder, incrementOrderCount,
     txSteps, setTxSteps, updateTxStep, clearTxSteps,
-    teeStatus, setTeeStatus, setTeeConnection,
+    teeStatus, setTeeStatus, setTeeConnection, teeConnection,
     addAuditEvent, setPermissionSteps,
     privateBalance, publicBalance, setBalances, auctionOrderCount,
     matchResult,
@@ -84,10 +84,17 @@ export function TraderTerminal() {
       await delay(500)
       updateTxStep('create-perm', 'done', 'Permission PDA created')
       updateTxStep('delegate', 'active')
-      await delay(600)
+      await delay(400)
       updateTxStep('delegate', 'done', 'Delegated to TEE validator')
       updateTxStep('submit-order', 'active')
-      await delay(500)
+      
+      // REAL SIGNATURE: Sign the transfer of funds into the PER escrow
+      if (teeConnection && sendTransaction) {
+        await signAndSendApiTx(result.transferTx, teeConnection, sendTransaction)
+      } else {
+        await delay(800) // Fallback for simulation
+      }
+      
       updateTxStep('submit-order', 'done', `Order ${result.order.id} sealed in PER`)
 
       addOrder(result.order)
@@ -127,8 +134,15 @@ export function TraderTerminal() {
       await delay(400)
       updateTxStep('build-deposit', 'done', `${response.instructionCount} instructions built`)
       updateTxStep('sign-send', 'active')
-      await delay(500)
-      updateTxStep('sign-send', 'done', `Broadcast to ${response.sendTo}`)
+      
+      // REAL SIGNATURE: Sign the deposit into the PER
+      if (teeConnection && sendTransaction) {
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction)
+        updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
+      } else {
+        await delay(1000)
+        updateTxStep('sign-send', 'done', `Broadcast to ${response.sendTo}`)
+      }
       addAuditEvent({ id: `AE-dep-${Date.now()}`, timestamp: Date.now(), actor: publicKey.toBase58().slice(0,8)+'…', action: `Deposit ${depositAmount} USDC → PER`, visibilityTier: 'trader' })
       setSuccessMsg(`Deposit of ${depositAmount} USDC initiated`)
       setBalances(publicBalance - Number(depositAmount), privateBalance + Number(depositAmount))
@@ -158,8 +172,15 @@ export function TraderTerminal() {
       await delay(600)
       updateTxStep('build-withdraw', 'done', `${response.instructionCount} instructions`)
       updateTxStep('sign-send', 'active')
-      await delay(500)
-      updateTxStep('sign-send', 'done', 'Withdrawal sent to base chain')
+      
+      // REAL SIGNATURE: Sign the withdrawal from the PER
+      if (teeConnection && sendTransaction) {
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction)
+        updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
+      } else {
+        await delay(800)
+        updateTxStep('sign-send', 'done', 'Withdrawal sent to base chain')
+      }
       addAuditEvent({ id: `AE-wit-${Date.now()}`, timestamp: Date.now(), actor: publicKey.toBase58().slice(0,8)+'…', action: `Withdraw ${withdrawAmount} USDC from PER`, visibilityTier: 'trader' })
       setSuccessMsg(`Withdrawal of ${withdrawAmount} USDC initiated`)
       setBalances(publicBalance + Number(withdrawAmount), privateBalance - Number(withdrawAmount))
