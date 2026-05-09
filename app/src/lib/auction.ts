@@ -64,7 +64,7 @@ export interface AuditEvent {
 }
 
 // --- Default demo auction -----------------------------------
-export function createDemoAuction(): AuctionConfig {
+export function createDemoAuction(durationMinutes: number = 5): AuctionConfig {
   return {
     id: 'AUCTION-001',
     pair: 'USDC/SOL',
@@ -72,7 +72,7 @@ export function createDemoAuction(): AuctionConfig {
     quoteMint: 'So11111111111111111111111111111111111111112',
     lotSize: 100,
     minIncrement: 0.01,
-    closeTime: Math.floor(Date.now() / 1000) + 15 * 60, // 15 min from now
+    closeTime: Math.floor(Date.now() / 1000) + durationMinutes * 60,
     feeBps: 5,
     status: 'open',
   }

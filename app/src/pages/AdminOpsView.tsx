@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { GlassCard, StatusDot } from '../components/GlassCard'
 import { useAppStore } from '../store/useAppStore'
 import { buildDemoCrankState, simulateCrankTick, getCrankCountdown } from '../lib/crank'
@@ -7,12 +7,28 @@ import { TEE_URL, TEE_VALIDATOR, PAYMENTS_API, CLUSTER } from '../lib/magicblock
 
 export function AdminOpsView() {
   const { currentAuction, setAuction, crankState, setCrankState, teeStatus, auctionOrderCount, resetAuctionState } = useAppStore()
+  const [durationMinutes, setDurationMinutes] = useState<number>(5)
   
   const handleResetAuction = () => {
     resetAuctionState()
-    const newAuction = createDemoAuction()
+    const newAuction = createDemoAuction(durationMinutes)
     setAuction(newAuction)
     setCrankState(buildDemoCrankState(newAuction))
+  }
+
+  const handleForceCrank = () => {
+    if (!currentAuction || !crankState) return
+    const now = Math.floor(Date.now() / 1000)
+    
+    // Set auction close time to now
+    setAuction({ ...currentAuction, closeTime: now })
+    
+    // Force crank jobs to execute immediately
+    const newJobs = crankState.jobs.map(job => ({
+      ...job,
+      scheduledAt: now
+    }))
+    setCrankState({ ...crankState, jobs: newJobs })
   }
 
   useEffect(() => {
@@ -77,9 +93,14 @@ export function AdminOpsView() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'var(--space-5)' }}>
         {/* Crank Scheduler */}
         <GlassCard padding="0" elevated>
-          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)' }}>
-            <div className="heading-2">Crank Scheduler</div>
-            <div className="caption" style={{ marginTop: 2 }}>Handles time-based auction close and settlement triggers only</div>
+          <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div className="heading-2">Crank Scheduler</div>
+              <div className="caption" style={{ marginTop: 2 }}>Handles time-based auction close and settlement triggers only</div>
+            </div>
+            <button className="btn btn--secondary btn--sm" onClick={handleForceCrank} disabled={!crankState?.jobs.length}>
+              Trigger Crank Now
+            </button>
           </div>
           {crankState?.jobs.length ? (
             <div>
@@ -143,9 +164,23 @@ export function AdminOpsView() {
         <GlassCard padding="0" elevated>
           <div style={{ padding: '16px 20px', borderBottom: '1px solid var(--glass-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <div className="heading-2">Auction Configuration</div>
-            <button className="btn btn--secondary btn--sm" onClick={handleResetAuction}>
-              Reset & Start New
-            </button>
+            <div className="flex items-center gap-3">
+              <select 
+                className="form-input" 
+                style={{ padding: '4px 8px', fontSize: '0.8rem', height: 'auto', backgroundColor: 'var(--glass-bg-hover)' }}
+                value={durationMinutes}
+                onChange={(e) => setDurationMinutes(Number(e.target.value))}
+              >
+                <option value={1}>1 Minute</option>
+                <option value={3}>3 Minutes</option>
+                <option value={5}>5 Minutes</option>
+                <option value={15}>15 Minutes</option>
+                <option value={30}>30 Minutes</option>
+              </select>
+              <button className="btn btn--secondary btn--sm" onClick={handleResetAuction}>
+                Reset & Start New
+              </button>
+            </div>
           </div>
           {currentAuction ? (
             <div>
