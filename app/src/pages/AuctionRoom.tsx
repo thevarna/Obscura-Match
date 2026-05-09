@@ -9,7 +9,7 @@ export function AuctionRoom() {
   const {
     currentAuction, setAuction, matchResult, setMatchResult,
     auctionOrderCount, setCrankState, crankState, addAuditEvent,
-    walletPublicKey, myOrders, updateOrderStatus
+    walletPublicKey, updateOrderStatus
   } = useAppStore()
   const [auctionClosed, setAuctionClosed] = useState(false)
   const [settling, setSettling] = useState(false)
