@@ -89,8 +89,8 @@ export function TraderTerminal() {
       updateTxStep('submit-order', 'active')
       
       // REAL SIGNATURE: Sign the transfer of funds into the PER escrow
-      if (teeConnection && sendTransaction) {
-        await signAndSendApiTx(result.transferTx, teeConnection, sendTransaction)
+      if (teeConnection && sendTransaction && publicKey) {
+        await signAndSendApiTx(result.transferTx, teeConnection, sendTransaction, publicKey)
       } else {
         await delay(800) // Fallback for simulation
       }
@@ -136,8 +136,8 @@ export function TraderTerminal() {
       updateTxStep('sign-send', 'active')
       
       // REAL SIGNATURE: Sign the deposit into the PER
-      if (teeConnection && sendTransaction) {
-        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction)
+      if (teeConnection && sendTransaction && publicKey) {
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey)
         updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
       } else {
         await delay(1000)
@@ -174,8 +174,8 @@ export function TraderTerminal() {
       updateTxStep('sign-send', 'active')
       
       // REAL SIGNATURE: Sign the withdrawal from the PER
-      if (teeConnection && sendTransaction) {
-        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction)
+      if (teeConnection && sendTransaction && publicKey) {
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey)
         updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
       } else {
         await delay(800)

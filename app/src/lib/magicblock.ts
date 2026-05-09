@@ -83,14 +83,38 @@ export async function verifyAndConnectTEE(
 export async function signAndSendApiTx(
   response: PaymentsApiResponse,
   connection: Connection,
-  sendTransaction: (tx: Transaction | VersionedTransaction, conn: Connection) => Promise<string>
+  sendTransaction: (tx: Transaction | VersionedTransaction, conn: Connection) => Promise<string>,
+  userPublicKey: PublicKey
 ): Promise<string> {
-  const bytes = Uint8Array.from(atob(response.transactionBase64), c => c.charCodeAt(0))
-  const tx = response.version === 'legacy'
-    ? Transaction.from(bytes)
-    : VersionedTransaction.deserialize(bytes)
-  const signature = await sendTransaction(tx, connection)
-  return signature
+  const bytes = Uint8Array.from(atob(response.transactionBase64.trim()), c => c.charCodeAt(0))
+  let tx: Transaction | VersionedTransaction
+  
+  if (response.version === 'legacy') {
+    tx = Transaction.from(bytes)
+    tx.feePayer = userPublicKey
+    // Refresh blockhash to avoid "expired" errors from the API response
+    const { blockhash } = await connection.getLatestBlockhash('confirmed')
+    tx.recentBlockhash = blockhash
+  } else {
+    tx = VersionedTransaction.deserialize(bytes)
+    // Note: Updating blockhash in VersionedTransaction requires re-compiling the message.
+    // We assume the MagicBlock API provides a sufficiently fresh one for Versioned TXs.
+  }
+    
+  try {
+    return await sendTransaction(tx, connection)
+  } catch (err: any) {
+    console.warn('[Obscura] Transaction failed via primary RPC, trying standard Devnet fallback...', err)
+    const standardConn = new Connection('https://api.devnet.solana.com', 'confirmed')
+    
+    // If it's a legacy transaction, try refreshing the blockhash again for the fallback connection
+    if (tx instanceof Transaction) {
+      const { blockhash } = await standardConn.getLatestBlockhash('confirmed')
+      tx.recentBlockhash = blockhash
+    }
+    
+    return await sendTransaction(tx, standardConn)
+  }
 }
 
 // --- Private Payments API calls ---------------------------
