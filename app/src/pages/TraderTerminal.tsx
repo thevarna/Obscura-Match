@@ -12,7 +12,7 @@ import { TEE_VALIDATOR } from '../lib/magicblock'
 type FormTab = 'order' | 'deposit' | 'withdraw'
 
 export function TraderTerminal() {
-  const { publicKey, signMessage, sendTransaction } = useWallet()
+  const { publicKey, signMessage, sendTransaction, signTransaction } = useWallet()
   const {
     currentAuction, setAuction, myOrders, addOrder, incrementOrderCount,
     txSteps, setTxSteps, updateTxStep, clearTxSteps,
@@ -90,7 +90,7 @@ export function TraderTerminal() {
       
       // REAL SIGNATURE: Sign the transfer of funds into the PER escrow
       if (teeConnection && sendTransaction && publicKey) {
-        await signAndSendApiTx(result.transferTx, teeConnection, sendTransaction, publicKey)
+        await signAndSendApiTx(result.transferTx, teeConnection, sendTransaction, publicKey, signTransaction)
       } else {
         await delay(800) // Fallback for simulation
       }
@@ -105,7 +105,9 @@ export function TraderTerminal() {
       setBalances(publicBalance, privateBalance - Number(size))
       setSize(''); setLimitPrice('')
     } catch (err: any) {
-      setFormError(err.message || 'Order submission failed')
+      console.error('[Obscura] Order submission failed:', err)
+      const logs = err.getLogs ? await err.getLogs() : null
+      setFormError(logs ? `Simulation failed: ${logs.join(', ')}` : (err.message || 'Order submission failed'))
       updateTxStep('submit-order', 'error')
     } finally {
       setSubmitting(false)
@@ -137,7 +139,7 @@ export function TraderTerminal() {
       
       // REAL SIGNATURE: Sign the deposit into the PER
       if (teeConnection && sendTransaction && publicKey) {
-        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey)
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey, signTransaction)
         updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
       } else {
         await delay(1000)
@@ -148,6 +150,7 @@ export function TraderTerminal() {
       setBalances(publicBalance - Number(depositAmount), privateBalance + Number(depositAmount))
       setDepositAmount('')
     } catch (err: any) {
+      console.error('[Obscura] Deposit failed:', err)
       setFormError(err.message || 'Deposit failed')
       updateTxStep('sign-send', 'error', 'Check balance and try again')
     } finally {
@@ -175,7 +178,7 @@ export function TraderTerminal() {
       
       // REAL SIGNATURE: Sign the withdrawal from the PER
       if (teeConnection && sendTransaction && publicKey) {
-        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey)
+        const sig = await signAndSendApiTx(response, teeConnection, sendTransaction, publicKey, signTransaction)
         updateTxStep('sign-send', 'done', `Signature: ${sig.slice(0,8)}…`)
       } else {
         await delay(800)
