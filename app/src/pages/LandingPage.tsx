@@ -58,9 +58,16 @@ export function LandingPage() {
           <button id="cta-launch-terminal" className="btn btn--primary btn--lg" onClick={() => setActiveView('terminal')}>
             Launch Terminal →
           </button>
-          <button id="cta-view-auction" className="btn btn--secondary btn--lg" onClick={() => setActiveView('auction')}>
-            View Auction Room
-          </button>
+          <a 
+            id="cta-watch-demo" 
+            className="btn btn--secondary btn--lg" 
+            href="https://www.loom.com/share/1d6524554e8445c79acb674947671fcd"
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{ textDecoration: 'none' }}
+          >
+            Watch Demo
+          </a>
         </div>
 
         {/* Live Stats Strip */}
